@@ -3,6 +3,7 @@
 #include <catch2/catch.hpp>
 
 #include <websocket/opcode.hpp>
+#include <websocket/frame.hpp>
 
 using namespace websocket;
 

@@ -1,0 +1,163 @@
+namespace websocket
+{
+  inline
+  frame_t::frame_t() :
+    control(0),
+    info(0),
+    size(0),
+    mask(0)
+  {
+
+  }
+
+  inline
+  bool frame_t::is_final() const
+  {
+    return this->control & mask::fin;
+  }
+
+  inline
+  bool frame_t::has_rsv1() const
+  {
+    return this->control & mask::rsv1;
+  }
+
+  inline
+  bool frame_t::has_rsv2() const
+  {
+    return this->control & mask::rsv2;
+  }
+
+  inline
+  bool frame_t::has_rsv3() const
+  {
+    return this->control & mask::rsv3;
+  }
+
+  inline
+  opcode frame_t::opcode_() const
+  {
+    return opcode(this->control & mask::opcode);
+  }
+
+  inline
+  bool frame_t::is_masked() const
+  {
+    return this->info & mask::masked;
+  }
+
+  inline
+  uint64_t frame_t::length() const
+  {
+    return this->size;
+  }
+
+  inline
+  uint32_t frame_t::payload_mask() const
+  {
+    return this->mask;
+  }
+
+#define SET_VALUE_IF(holder, mask, condition)				\
+  static_assert(std::is_same<decltype(condition), bool>::value, "condition must be of type 'bool'"); \
+  (holder) ^= (-(uint8_t)(condition) ^ (holder)) & (mask)
+
+  inline
+  void frame_t::is_final(bool val)
+  {
+    SET_VALUE_IF(this->control, mask::fin, val);
+  }
+
+  inline
+  void frame_t::has_rsv1(bool val)
+  {
+    SET_VALUE_IF(this->control, mask::rsv1, val);
+  }
+
+  inline
+  void frame_t::has_rsv2(bool val)
+  {
+    SET_VALUE_IF(this->control, mask::rsv2, val);
+  }
+
+  inline
+  void frame_t::has_rsv3(bool val)
+  {
+    SET_VALUE_IF(this->control, mask::rsv3, val);
+  }
+
+#define SET_VALUE(holder, mask, value) (holder) &= ~(mask); (holder) |= ((mask) & (value))
+
+  inline
+  void frame_t::opcode_(opcode val)
+  {
+    SET_VALUE(this->control, mask::opcode, (uint8_t)val);
+  }
+
+  inline
+  void frame_t::is_masked(bool val)
+  {
+    SET_VALUE_IF(this->info, mask::masked, val);
+  }
+
+#undef SET_VALUE_IF
+
+  inline
+  bool frame_t::length(uint64_t size)
+  {
+    if(size <= size::max::small)
+      {
+	SET_VALUE(this->info, mask::length, (uint8_t)size);
+      }
+    else if(size <= size::max::medium)
+      {
+	SET_VALUE(this->info, mask::length, size::medium::delimiter);
+      }
+    else if(size <= size::max::large)
+      {
+	SET_VALUE(this->info, mask::length, size::large::delimiter);
+      }
+    else
+      {
+	return false;
+      }
+
+    this->size = size;
+
+    return true;
+  }
+
+  inline
+  void frame_t::payload_mask(uint32_t mask)
+  {
+    this->is_masked(true);
+    this->mask = mask;
+  }
+
+#undef SET_VALUE
+
+  size::type frame_t::size_type() const
+  {
+    return (size::type)(this->info & mask::length);
+  }
+
+  std::size_t frame_t::header_size() const
+  {
+    size_t size = 2;
+
+    switch(this->size_type())
+      {
+      case size::large::delimiter:  size += 6;
+      case size::medium::delimiter: size += 2;
+      }
+
+    size += 4 * this->is_masked();
+
+    return size;
+  }
+
+  std::size_t frame_t::total_size() const
+  {
+    return this->header_size() + this->length();
+  }
+};
