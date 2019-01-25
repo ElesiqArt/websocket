@@ -18,14 +18,14 @@ namespace websocket
   template<typename T> inline
   bool is_valid_opcode(T value)
   {
-    switch(value)
+    switch((opcode)value)
       {
-      case (uint8_t)opcode::continuation:
-      case (uint8_t)opcode::text:
-      case (uint8_t)opcode::binary:
-      case (uint8_t)opcode::close:
-      case (uint8_t)opcode::ping:
-      case (uint8_t)opcode::pong:
+      case opcode::continuation:
+      case opcode::text:
+      case opcode::binary:
+      case opcode::close:
+      case opcode::ping:
+      case opcode::pong:
 	return true;
       default:
 	return false;
