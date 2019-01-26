@@ -1,0 +1,52 @@
+namespace websocket
+{
+  namespace status_code
+  {
+    inline
+    bool is_unused(type code)
+    {
+      return code < 1000;
+    }
+
+    inline
+    bool is_protocol(type code)
+    {
+      return 1000 <= code && code < 3000;
+    }
+
+    inline
+    bool is_registered(type code)
+    {
+      return 3000 <= code && code < 4000;
+    }
+
+    inline
+    bool is_unregistered(type code)
+    {
+      return 4000 <= code && code < 5000;
+    }
+
+    inline
+    const char * rfc6455_t::reason(type code)
+    {
+      switch(code)
+	{
+	case normal: return "normal";
+	case going_away: return "going away";
+	case protocol_error: return "protocol error";
+	case invalid_data: return "invalid data";
+	case reserved: return "reserved";
+	case none: return "none";
+	case abnormal: return "abnormal";
+	case inconsistent: return "inconsistent";
+	case policy_violation: return "policy violation";
+	case too_big: return "too big";
+	case extension_negociation_failure: return "extension negociation failure";
+	case unexpected_condition: return "unexpected condition";
+	case tls_handshake_failed: return "tls handshake failed";
+
+	default: return "Unknown";
+	}
+    }
+  };
+};

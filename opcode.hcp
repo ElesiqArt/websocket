@@ -47,4 +47,10 @@ namespace websocket
   {
     return value != opcode::continuation && !is_control(value);
   }
+
+  inline
+  bool is_data(opcode value)
+  {
+    return !is_control(value);
+  }
 };

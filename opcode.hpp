@@ -22,6 +22,8 @@ namespace websocket
 
   bool is_control(opcode value);
   bool is_non_control(opcode value);
+
+  bool is_data(opcode value);
 };
 
 #include <websocket/opcode.hcp>
