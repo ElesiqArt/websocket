@@ -2,9 +2,10 @@
 
 #include <catch2/catch.hpp>
 
+#include <websocket/codec.hpp>
+#include <websocket/frame.hpp>
 #include <websocket/opcode.hpp>
 #include <websocket/status.hpp>
-#include <websocket/frame.hpp>
 
 using namespace websocket;
 
@@ -73,5 +74,30 @@ SCENARIO("Frame", "[frame]")
 	      REQUIRE(!is_valid_opcode(frame.opcode_()));
 	    }
 	}
+    }
+}
+
+bool test_encoding(const uint8_t * value, std::size_t length, const uint8_t mask[4], const uint8_t * out)
+{
+  for(std::size_t i = 0; i < length; ++i)
+    {
+      if(out[i] != (value[i] ^ mask[i%4])) return false;
+    }
+
+  return true;
+}
+
+SCENARIO("Codec", "[codec]")
+{
+  const uint8_t buffer[] = {0x48,0x65,0x6c,0x6c,0x6f,0x20,0x77,0x6f,0x72,0x6c,0x64,0x21};
+  const std::size_t size = 12;
+  const uint8_t mask[] = {0x3F, 0x8A, 0xF1, 0x32};
+
+  uint8_t out[size] = {0};
+
+  for(std::size_t i = 1; i < size; ++i)
+    {
+      xcode(buffer, i, mask, out);
+      REQUIRE(test_encoding(buffer, i, mask, out));
     }
 }

@@ -32,7 +32,7 @@ bool is_control(opcode value);
 bool is_non_control(opcode value);
 ```
 
-###### Helper
+### Helper
 ```cpp
 //Declared in <websocket/helper.hpp>
 
@@ -52,7 +52,7 @@ namespace size
 };
 ```
 
-###### Frame
+### Frame
 
 ```cpp
 //Defined in <websocket/frame.hpp>
@@ -90,6 +90,15 @@ struct frame_t
   uint64_t size;
   uint32_t mask;
 };
+```
+
+### Codec
+
+```cpp
+//Defined in <websocket/codec.hpp>
+
+void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);
+void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * out);
 ```
 
 ## Tests
