@@ -3,8 +3,10 @@
 #include <catch2/catch.hpp>
 
 #include <websocket/codec.hpp>
+#include <websocket/data.hpp>
 #include <websocket/frame.hpp>
 #include <websocket/opcode.hpp>
+#include <websocket/parser.hpp>
 #include <websocket/status.hpp>
 
 using namespace websocket;
@@ -100,4 +102,34 @@ SCENARIO("Codec", "[codec]")
       xcode(buffer, i, mask, out);
       REQUIRE(test_encoding(buffer, i, mask, out));
     }
+}
+
+template<bool Masked>
+void parser()
+{
+  const uint8_t * buffer;
+  std::size_t size;
+
+  for(int i = 1; i <= 4; ++i)
+    {
+      buffer = data::frame_buffer<Masked>(i, size);
+      const char * text = data::frame_payload(i);
+
+      frame_t frame;
+      const uint8_t * current = parse(buffer, frame);
+
+      REQUIRE((std::size_t)(current - buffer) == size - std::strlen(text));
+      REQUIRE(frame.length() == std::strlen(text));
+
+      char data[frame.length()] = {0};
+      xcode(current, frame.length(), frame.mask, (uint8_t *)data);
+
+      REQUIRE(std::memcmp(data, text, std::strlen(text)) == 0);
+    }
+}
+
+SCENARIO("Parser", "[parser]")
+{
+  parser<true>();
+  parser<false>();
 }

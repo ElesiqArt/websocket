@@ -1,0 +1,89 @@
+namespace websocket
+{
+  inline
+  const uint8_t * parse_control_and_info(const uint8_t * in, frame_t & frame)
+  {
+    frame.control = in[0];
+    frame.info = in[1];
+
+    return in + 2;
+  }
+
+  inline
+  const uint8_t * parse_medium_size(const uint8_t * in, uint64_t & size)
+  {
+    size += (uint64_t)in[0] << 8;
+    size += (uint64_t)in[1];
+
+    return in + 2;
+  }
+
+  inline
+  const uint8_t * parse_large_size(const uint8_t * in, uint64_t & size)
+  {
+    size += (uint64_t)in[0] << 56;
+    size += (uint64_t)in[1] << 48;
+    size += (uint64_t)in[2] << 40;
+    size += (uint64_t)in[3] << 32;
+    size += (uint64_t)in[4] << 24;
+    size += (uint64_t)in[5] << 16;
+    size += (uint64_t)in[6] << 8;
+    size += (uint64_t)in[7];
+
+    return in + 8;
+  }
+
+  inline
+  const uint8_t * parse_mask(const uint8_t * in, uint32_t & mask)
+  {
+    mask  = in[0];
+    mask += in[1] << 8;
+    mask += in[2] << 16;
+    mask += in[3] << 24;
+
+    return in + 4;
+  }
+
+  inline
+  const uint8_t * parse_size_and_mask(const uint8_t * in, frame_t & frame)
+  {
+    switch(frame.size_type())
+      {
+      default://small
+	{
+	  frame.size = (uint64_t)frame.size_type();
+
+	  break;
+	}
+      case size::medium::delimiter:
+	{
+	  in = parse_medium_size(in, frame.size);
+
+	  break;
+	}
+      case size::large::delimiter:
+	{
+	  in = parse_large_size(in, frame.size);
+
+	  break;
+	}
+      }
+
+    if(frame.is_masked())
+      {
+	return parse_mask(in, frame.mask);
+      }
+    else
+      {
+	return in;
+      }
+  }
+
+  inline
+  const uint8_t * parse(const uint8_t * in, frame_t & frame)
+  {
+    in = parse_control_and_info(in, frame);
+
+    return parse_size_and_mask(in, frame);
+  }
+};
