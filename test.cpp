@@ -8,6 +8,7 @@
 #include <websocket/opcode.hpp>
 #include <websocket/parser.hpp>
 #include <websocket/status.hpp>
+#include <websocket/writer.hpp>
 
 using namespace websocket;
 
@@ -132,4 +133,100 @@ SCENARIO("Parser", "[parser]")
 {
   parser<true>();
   parser<false>();
+}
+
+template<bool Masked>
+void writer()
+{
+  const uint8_t * buffer;
+  std::size_t size;
+
+  for(int i = 1; i <= 4; ++i)
+    {
+      frame_t frame = data::frame<Masked>(i);
+      buffer = data::frame_buffer<Masked>(i, size);
+      const char * text = data::frame_payload(i);
+
+      frame.length(std::strlen(text));
+
+      char data[frame_t::max_header_size + ::strlen(text)] = {0};
+
+      {
+	uint8_t * payload = write_frame(frame, (uint8_t *)data);
+
+	if(frame.is_masked())
+	  {
+	    xcode((const uint8_t *)text, frame.length(), frame.mask, (uint8_t *)payload);
+	  }
+	else
+	  {
+	    std::memcpy(payload, text, frame.length());
+	  }
+
+	REQUIRE(std::memcmp(buffer, data, size) == 0);
+      }
+
+      {
+	uint8_t * payload = (uint8_t *)data + frame_t::max_header_size;
+	uint8_t * begin = write_frame_backward(frame, payload);
+
+	if(frame.is_masked())
+	  {
+	    xcode((const uint8_t *)text, frame.length(), frame.mask, payload);
+	  }
+	else
+	  {
+	    std::memcpy(payload, text, frame.length());
+	  }
+
+	REQUIRE(std::memcmp(buffer, begin, size) == 0);
+      }
+    }
+}
+
+SCENARIO("Writer", "[writer]")
+{
+  uint8_t buffer[frame_t::max_header_size] = {0};
+  uint8_t * out;
+
+  WHEN("writing a medium size")
+    {
+      out = write_medium_size(size::max::small + 1, buffer);
+      REQUIRE(out == buffer + 2);
+      REQUIRE(buffer[0] == 0x00);
+      REQUIRE(buffer[1] == 0x7E);
+
+      out = write_medium_size(size::max::medium - 1, buffer);
+      REQUIRE(out == buffer + 2);
+      REQUIRE(buffer[0] == 0xFF);
+      REQUIRE(buffer[1] == 0xFE);
+    }
+
+  WHEN("writing a large size")
+    {
+      out = write_large_size(size::max::medium + 1, buffer);
+      REQUIRE(out == buffer + 8);
+      REQUIRE(buffer[0] == 0x00);
+      REQUIRE(buffer[1] == 0x00);
+      REQUIRE(buffer[2] == 0x00);
+      REQUIRE(buffer[3] == 0x00);
+      REQUIRE(buffer[4] == 0x00);
+      REQUIRE(buffer[5] == 0x01);
+      REQUIRE(buffer[6] == 0x00);
+      REQUIRE(buffer[7] == 0x00);
+
+      out = write_large_size(size::max::large - 1, buffer);
+      REQUIRE(out == buffer + 8);
+      REQUIRE(buffer[0] == 0x7F);
+      REQUIRE(buffer[1] == 0xFF);
+      REQUIRE(buffer[2] == 0xFF);
+      REQUIRE(buffer[3] == 0xFF);
+      REQUIRE(buffer[4] == 0xFF);
+      REQUIRE(buffer[5] == 0xFF);
+      REQUIRE(buffer[6] == 0xFF);
+      REQUIRE(buffer[7] == 0xFE);
+    }
+
+  writer<true>();
+  writer<false>();
 }

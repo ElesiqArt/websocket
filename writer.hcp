@@ -1,0 +1,104 @@
+namespace websocket
+{
+  inline
+  uint8_t * write_medium_size(uint64_t size, uint8_t * out)
+  {
+    out[0] = (uint8_t)(size >> 8);
+    out[1] = (uint8_t)size;
+
+    return out + 2;
+  }
+
+  inline
+  uint8_t * write_large_size(uint64_t size, uint8_t * out)
+  {
+    out[0] = (uint8_t)(size >> 56);
+    out[1] = (uint8_t)(size >> 48);
+    out[2] = (uint8_t)(size >> 40);
+    out[3] = (uint8_t)(size >> 32);
+    out[4] = (uint8_t)(size >> 24);
+    out[5] = (uint8_t)(size >> 16);
+    out[6] = (uint8_t)(size >> 8);
+    out[7] = (uint8_t)(size);
+
+    return out + 8;
+  }
+
+  inline
+  uint8_t * write_mask(uint32_t mask, uint8_t * out)
+  {
+    out[0] = (uint8_t)((mask & 0x000000FF));
+    out[1] = (uint8_t)((mask & 0x0000FF00) >> 8);
+    out[2] = (uint8_t)((mask & 0x00FF0000) >> 16);
+    out[3] = (uint8_t)((mask & 0xFF000000) >> 24);
+
+    return out + 4;
+  }
+
+  inline
+  uint8_t * write_frame(frame_t frame, uint8_t * out)
+  {
+    out[0] = frame.control;
+    out[1] = frame.info;
+
+    out += 2;
+
+    switch(frame.size_type())
+      {
+      case size::medium::delimiter:
+	{
+	  out = write_medium_size(frame.size, out);
+
+	  break;
+	}
+      case size::large::delimiter:
+	{
+	  out = write_large_size(frame.size, out);
+
+	  break;
+	}
+      }
+
+    if(frame.is_masked())
+      {
+	return write_mask(frame.mask, out);
+      }
+    else
+      {
+	return out;
+      }
+  }
+
+  inline
+  uint8_t * write_frame_backward(frame_t frame, uint8_t * out)
+  {
+    if(frame.is_masked())
+      {
+	write_mask(frame.mask, out - 4);
+	out -= 4;
+      }
+
+    switch(frame.size_type())
+      {
+      case size::medium::delimiter:
+	{
+	  write_medium_size(frame.size, out - 2);
+	  out -= 2;
+	  break;
+	}
+      case size::large::delimiter:
+	{
+	  write_large_size(frame.size, out - 8);
+	  out -= 8;
+	  break;
+	}
+      }
+
+    --out;
+    *out = frame.info;
+    --out;
+    *out = frame.control;
+
+    return out;
+  }
+};
