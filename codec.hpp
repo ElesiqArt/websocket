@@ -1,6 +1,8 @@
 #ifndef WEBSOCKET_CODEC_HPP
 #define WEBSOCKET_CODEC_HPP
 
+#include <cstdint> // uint8_t uint64_t
+
 namespace websocket
 {
   void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);

@@ -5,6 +5,7 @@
 #include <websocket/codec.hpp>
 #include <websocket/data.hpp>
 #include <websocket/frame.hpp>
+#include <websocket/handler.hpp>
 #include <websocket/opcode.hpp>
 #include <websocket/parser.hpp>
 #include <websocket/status.hpp>

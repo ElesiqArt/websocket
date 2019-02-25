@@ -1,4 +1,4 @@
-#include <type_traits> // is_integral
+#include <type_traits> // is_integral is_enum
 
 namespace websocket
 {

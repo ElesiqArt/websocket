@@ -1,3 +1,5 @@
+#include <websocket/helper.hpp> // mask::* size::*
+
 namespace websocket
 {
   inline

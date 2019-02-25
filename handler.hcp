@@ -1,0 +1,45 @@
+#include <websocket/codec.hpp> // xcode()
+
+namespace websocket
+{
+  inline
+  handler_t::handler_t() :
+    payload(nullptr),
+    encoded(false)
+  {
+
+  }
+
+  inline
+  bool handler_t::is_payload_masked() const
+  {
+    return frame_t::is_masked();
+  }
+
+  inline
+  void handler_t::is_payload_masked(bool val)
+  {
+    frame_t::is_masked(val);
+    this->encoded = false;
+  }
+
+  inline
+  void handler_t::encode()
+  {
+    if(this->is_masked() && !this->encoded)
+      {
+	xcode(this->payload, this->size, this->mask, this->payload);
+	this->encoded = true;
+      }
+  }
+
+  inline
+  void handler_t::decode()
+  {
+    if(this->is_masked() && this->encoded)
+      {
+	xcode(this->payload, this->size, this->mask, this->payload);
+	this->encoded = false;
+      }
+  }
+};

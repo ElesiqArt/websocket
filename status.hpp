@@ -22,19 +22,19 @@ namespace websocket
     constexpr type protocol_error = 1002;
     constexpr type invalid_data = 1003;
     constexpr type reserved = 1004;
-    constexpr type none = 1005; // do not use in Close
-    constexpr type abnormal = 1006; // do not use in Close
+    constexpr type none = 1005; // do not send in a Close control frame
+    constexpr type abnormal = 1006; // do not send in a Close control frame
     constexpr type inconsistent = 1007;
     constexpr type policy_violation = 1008;
     constexpr type too_big = 1009;
     constexpr type extension_negociation_failure = 1010;
     constexpr type unexpected_condition = 1011;
-    constexpr type tls_handshake_failed = 1015; // do not use in Close
+    constexpr type tls_handshake_failed = 1015; // do not send in a Close control frame
 
     struct rfc6455_t
     {
       static const type max = 4999;
-      static const std::size_t max_reason_length = std::strlen("extension_negociation_failure");
+      static const std::size_t max_reason_length = std::strlen("extension negociation failure");
       static const char * reason(type code);
     };
   };

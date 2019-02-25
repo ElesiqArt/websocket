@@ -45,7 +45,7 @@ namespace websocket
 	case unexpected_condition: return "unexpected condition";
 	case tls_handshake_failed: return "tls handshake failed";
 
-	default: return "Unknown";
+	default: return "unknown";
 	}
     }
   };
