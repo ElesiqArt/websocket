@@ -106,15 +106,12 @@ SCENARIO("Codec", "[codec]")
     }
 }
 
-template<bool Masked>
-void parser()
+void parser(bool masked)
 {
-  const uint8_t * buffer;
-  std::size_t size;
-
   for(int i = 1; i <= 4; ++i)
     {
-      buffer = data::frame_buffer<Masked>(i, size);
+      std::size_t size;
+      const uint8_t * buffer = data::frame_buffer(i, masked, size);
       const char * text = data::frame_payload(i);
 
       frame_t frame;
@@ -132,20 +129,17 @@ void parser()
 
 SCENARIO("Parser", "[parser]")
 {
-  parser<true>();
-  parser<false>();
+  parser(true);
+  parser(false);
 }
 
-template<bool Masked>
-void writer()
+void writer(bool masked)
 {
-  const uint8_t * buffer;
-  std::size_t size;
-
   for(int i = 1; i <= 4; ++i)
     {
-      frame_t frame = data::frame<Masked>(i);
-      buffer = data::frame_buffer<Masked>(i, size);
+      frame_t frame = data::frame(i, masked);
+      std::size_t size;
+      const uint8_t * buffer = data::frame_buffer(i, masked, size);
       const char * text = data::frame_payload(i);
 
       frame.length(std::strlen(text));
@@ -228,6 +222,6 @@ SCENARIO("Writer", "[writer]")
       REQUIRE(buffer[7] == 0xFE);
     }
 
-  writer<true>();
-  writer<false>();
+  writer(true);
+  writer(false);
 }

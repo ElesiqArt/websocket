@@ -7,29 +7,19 @@ namespace websocket
 {
   namespace data
   {
-    template<bool Masked>
-    frame_t frame(std::size_t id);
-    template<bool Masked>
-    const uint8_t * frame_buffer(std::size_t id, std::size_t & size);
+    frame_t frame(std::size_t id, bool masked);
+    const uint8_t * frame_buffer(std::size_t id, bool masked, std::size_t & size);
     const char * frame_payload(std::size_t id);
 
-    template<bool Masked>
-    frame_t frame_1();
-    template<bool Masked>
-    frame_t frame_2();
-    template<bool Masked>
-    frame_t frame_3();
-    template<bool Masked>
-    frame_t frame_4();
+    frame_t frame_1(bool masked);
+    frame_t frame_2(bool masked);
+    frame_t frame_3(bool masked);
+    frame_t frame_4(bool masked);
 
-    template<bool Masked>
-    const uint8_t * frame_1_buffer(std::size_t & size);
-    template<bool Masked>
-    const uint8_t * frame_2_buffer(std::size_t & size);
-    template<bool Masked>
-    const uint8_t * frame_3_buffer(std::size_t & size);
-    template<bool Masked>
-    const uint8_t * frame_4_buffer(std::size_t & size);
+    const uint8_t * frame_1_buffer(bool masked, std::size_t & size);
+    const uint8_t * frame_2_buffer(bool masked, std::size_t & size);
+    const uint8_t * frame_3_buffer(bool masked, std::size_t & size);
+    const uint8_t * frame_4_buffer(bool masked, std::size_t & size);
 
     const char * frame_1_payload();
     const char * frame_2_payload();

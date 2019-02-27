@@ -1,0 +1,176 @@
+#include <cassert> // assert()
+#include <cstdio>
+#include <algorithm> // min()
+
+namespace websocket
+{
+  inline
+  std::ostream & print_control(std::ostream & os, uint8_t value)
+  {
+    os << (bool)(value & mask::fin);
+    os << '|' << (bool)(value & mask::rsv1);
+    os << '|' << (bool)(value & mask::rsv2);
+    os << '|' << (bool)(value & mask::rsv3);
+    os << '|';
+
+    if(is_valid_opcode(value & mask::opcode))
+      {
+	const std::string opcode_ = opcode_name((opcode)(value & mask::opcode));
+	std::size_t length = opcode_.length();
+	if(length <= 7)
+	  {
+	    os << std::string(7 - length, ' ') << opcode_;
+	  }
+	else
+	  {
+	    os << opcode_.substr(0, 6) << ".";
+	  }
+      }
+    else
+      {
+	const std::string str = std::to_string(value & mask::opcode);
+	os << std::string(7 - str.length(), ' ') << str;
+      }
+
+    return os;
+  }
+
+  inline
+  std::ostream & print_info(std::ostream & os, uint8_t value)
+  {
+    os << (bool)(value & mask::masked);
+
+    std::size_t length = value & mask::length;
+
+    if(length <= size::max::small)
+      {
+	os << '|';
+	print_size(os, length, 13);
+      }
+
+    return os;
+  }
+
+  inline
+  std::ostream & print_size(std::ostream & os, uint64_t size, std::size_t width)
+  {
+    const std::string value = std::to_string(size);
+
+    os << std::string(width - value.length(), ' ') << value;
+
+    return os;
+  }
+
+  inline
+  std::ostream & print_mask(std::ostream & os, const frame_t & frame, size_t width)
+  {
+    constexpr size_t size = 4 + 1 + 4 + 1 + 4 + 1 + 4 + 1;
+
+    assert(size <= width);
+
+    os << std::string(width - size + 1, ' ');
+
+    char buf[size];
+
+    int written = snprintf(buf, size, "0x%02X 0x%02X 0x%02X 0x%02X",
+			   (frame.mask & 0xFF000000) >> 24,
+			   (frame.mask & 0x00FF0000) >> 16,
+			   (frame.mask & 0x0000FF00) >> 8,
+			   (frame.mask & 0x000000FF));
+
+    assert(written == size - 1);(void)written;
+
+    return os.write(buf, size - 1);
+  }
+
+  inline
+  std::ostream & print_header(std::ostream & os, const frame_t & frame)
+  {
+    switch(frame.size_type())
+      {
+      default://small
+	{
+	  if(frame.is_masked())
+	    {
+	      os << "+-+-+-+-+-------+-+-------------+-------------------------------+" << std::endl;
+	      os << "|F|R|R|R| opcode|M| Payload len |           Masking-key         |" << std::endl;
+	      os << "|I|S|S|S|  (4)  |A|     (7)     |               (32)            |" << std::endl;
+	      os << "|N|V|V|V|       |S|             |                               |" << std::endl;
+	      os << "| |1|2|3|       |K|             |                               |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - + - - - - - - - - - - - - - - - +" << std::endl;
+	    }
+	  else
+	    {
+	      os << "+-+-+-+-+-------+-+-------------+-------------------------------+" << std::endl;
+	      os << "|F|R|R|R| opcode|M| Payload len |                               |" << std::endl;
+	      os << "|I|S|S|S|  (4)  |A|     (7)     |                               |" << std::endl;
+	      os << "|N|V|V|V|       |S|             |                               |" << std::endl;
+	      os << "| |1|2|3|       |K|             |                               |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - + - - - - - - - - - - - - - - - +" << std::endl;
+	    }
+
+	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|';
+
+	  if(frame.is_masked())
+	    {
+	      print_mask(os, frame, 31);
+	    }
+	  else
+	    {
+	      os << std::string(31, ' ');
+	    }
+
+	  os << '|' << std::endl;
+
+	  break;
+	}
+      case size::medium::delimiter:
+	{
+	  os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
+	  os << "|F|R|R|R| opcode|M|           Extended payload length           |" << std::endl;
+	  os << "|I|S|S|S|  (4)  |A|                    (16)                     |" << std::endl;
+	  os << "|N|V|V|V|       |S|                                             |" << std::endl;
+	  os << "| |1|2|3|       |K|                                             |" << std::endl;
+	  os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+
+	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|'; print_size(os, frame.size, 45) << '|' << std::endl;
+
+	  if(frame.is_masked())
+	    {
+	      os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
+	      os << "|                      Masking-key(32)                          |" << std::endl;
+	      os << "+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+
+	      os << '|'; print_mask(os, frame, 63) << '|' << std::endl;
+	    }
+
+	  break;
+	}
+      case size::large::delimiter:
+	{
+	  os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
+	  os << "|F|R|R|R| opcode|M|           Extended payload length           |" << std::endl;
+	  os << "|I|S|S|S|  (4)  |A|                    (64)                     |" << std::endl;
+	  os << "|N|V|V|V|       |S|                                             |" << std::endl;
+	  os << "| |1|2|3|       |K|                                             |" << std::endl;
+	  os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+
+	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|'; print_size(os, frame.size, 45) << '|' << std::endl;
+
+	  if(frame.is_masked())
+	    {
+	      os << "+---------------------------------------------------------------+" << std::endl;
+	      os << "|                        Masking-key(32)                        |" << std::endl;
+	      os << "+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+	      os << '|'; print_mask(os, frame, 63) << '|';
+	    }
+
+	  break;
+	}
+      }
+
+    os << "+---------------------------------------------------------------+" << std::endl;
+
+    return os;
+  }
+};

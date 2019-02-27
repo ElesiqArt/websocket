@@ -4,4 +4,7 @@ test.d
 test.o
 test
 
+printer.d
+printer
+
 *~
