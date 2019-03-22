@@ -1,6 +1,6 @@
 # Websocket++
 
-A small C++11 heaer-only library to handle websockets as per [RFC6455](https://tools.ietf.org/html/rfc6455).
+A small **C++ 11** header-only library under [MIT license](LICENSE) to handle websockets as per [RFC6455](https://tools.ietf.org/html/rfc6455).
 
 ## Reference
 
@@ -38,7 +38,7 @@ bool is_data(opcode value);
 
 ### Common
 
-General type, mask and constants.
+General types, masks and constants.
 
 ```cpp
 //Declared in <websocket/helper.hpp>
@@ -80,7 +80,7 @@ namespace size
 
 ### Frame
 
-Hold control and information data as well as the size and the mask.
+Hold control and information data as well as the size and the mask of the payload.
 
 ```cpp
 //Defined in <websocket/frame.hpp>
@@ -119,6 +119,61 @@ struct frame_t
 ```
 
 * The `bool length(uint64_t value)` function returns whether the size does not exceed the maximum allowed value.
+
+### Handler
+
+A wrapper to handle the frame, the payload and its masking status.
+
+```cpp
+//Defined in <websocket/handler.hpp>
+
+struct handler_t : frame_t
+{
+  bool is_payload_masked() const;
+  void is_payload_masked(bool val);
+
+  void encode();
+  void decode();
+
+  uint8_t * payload;
+  bool encoded;
+};
+```
+
+### Status code
+
+namespace status_code
+{
+  typedef uint16_t type;
+
+  bool is_unused(type code);
+  bool is_protocol(type code);
+  bool is_registered(type code);
+  bool is_unregistered(type code);
+
+  constexpr type any;
+
+  constexpr type normal;
+  constexpr type going_away;
+  constexpr type protocol_error;
+  constexpr type invalid_data;
+  constexpr type reserved;
+  constexpr type none; // do not send in a Close control frame
+  constexpr type abnormal; // do not send in a Close control frame
+  constexpr type inconsistent;
+  constexpr type policy_violation;
+  constexpr type too_big;
+  constexpr type extension_negociation_failure;
+  constexpr type unexpected_condition;
+  constexpr type tls_handshake_failed; // do not send in a Close control frame
+
+  struct rfc6455_t
+  {
+    static const type max;
+    static const std::size_t max_reason_length;
+    static const char * reason(type code);
+  };
+};
 
 ### Codec
 
