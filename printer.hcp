@@ -13,7 +13,7 @@ namespace websocket
     os << '|' << (bool)(value & mask::rsv3);
     os << '|';
 
-    if(is_valid_opcode(value & mask::opcode))
+    if(is_opcode_valid(value & mask::opcode))
       {
 	const std::string opcode_ = opcode_name((opcode)(value & mask::opcode));
 	std::size_t length = opcode_.length();

@@ -7,6 +7,9 @@ namespace websocket
 {
   void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);
   void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * out);
+
+  void xcode(uint8_t * in, uint64_t size, uint32_t mask);
+  void xcode(uint8_t * in, uint64_t size, const uint8_t mask[4]);
 };
 
 #include <websocket/codec.hcp>

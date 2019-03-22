@@ -17,3 +17,4 @@ printer: printer.cpp Makefile
 
 clean:
 	rm -f test.d test.o test
+	rm -f printer.d printer.o printer

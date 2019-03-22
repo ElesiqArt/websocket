@@ -1,4 +1,4 @@
-#include <websocket/helper.hpp> // mask::* size::*
+#include <websocket/common.hpp> // mask::* size::*
 
 namespace websocket
 {
@@ -88,7 +88,7 @@ namespace websocket
     SET_VALUE_IF(this->control, mask::rsv3, val);
   }
 
-#define SET_VALUE(holder, mask, value) (holder) &= ~(mask); (holder) |= ((mask) & (value))
+#define SET_VALUE(holder, mask, value) (holder) &= ~(mask); (holder) |= (mask) & (value)
 
   inline
   void frame_t::opcode_(opcode val)

@@ -1,5 +1,5 @@
-#ifndef WEBSOCKET_HELPER_HPP
-#define WEBSOCKET_HELPER_HPP
+#ifndef WEBSOCKET_COMMON_HPP
+#define WEBSOCKET_COMMON_HPP
 
 #include <cstdint> // uint8_t uint64_t
 
@@ -40,4 +40,4 @@ namespace websocket
   };
 };
 
-#endif/*WEBSOCKET_HELPER_HPP*/
+#endif/*WEBSOCKET_COMMON_HPP*/

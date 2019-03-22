@@ -3,7 +3,7 @@
 
 #include <cstdint> // uint8_t uint32_t uint64_t
 
-#include <websocket/helper.hpp> // size::type
+#include <websocket/common.hpp> // size::type
 #include <websocket/opcode.hpp> // opcode
 
 namespace websocket

@@ -11,7 +11,6 @@ void run(bool masked)
   for(int i = 1; i <= 4; ++i)
     {
       frame_t frame = data::frame(i, masked);
-      //const uint8_t * buffer = data::frame_buffer(i, masked, size);
 
       print_header(std::cout, frame);
     }

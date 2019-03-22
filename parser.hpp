@@ -13,7 +13,7 @@ namespace websocket
   const uint8_t * parse_mask(const uint8_t * in, uint32_t & mask);
 
   const uint8_t * parse_size_and_mask(const uint8_t * in, frame_t & frame);
-  const uint8_t * parse(const uint8_t * in, frame_t & frame);//frame must be initialized
+  const uint8_t * parse(const uint8_t * in, frame_t & frame);
 };
 
 #include <websocket/parser.hcp>

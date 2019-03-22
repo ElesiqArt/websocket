@@ -15,6 +15,9 @@ using namespace websocket;
 
 SCENARIO("Opcode", "[opcode]")
 {
+  REQUIRE(!is_opcode_valid(-12));
+  REQUIRE(is_opcode_valid(1));
+
   REQUIRE(!is_control(opcode::continuation));
   REQUIRE(!is_control(opcode::text));
   REQUIRE(!is_control(opcode::binary));
@@ -75,7 +78,7 @@ SCENARIO("Frame", "[frame]")
 	      REQUIRE(frame.has_rsv1());
 	      REQUIRE(!frame.has_rsv2());
 	      REQUIRE(frame.has_rsv3());
-	      REQUIRE(!is_valid_opcode(frame.opcode_()));
+	      REQUIRE(!is_opcode_valid(frame.opcode_()));
 	    }
 	}
     }

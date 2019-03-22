@@ -18,7 +18,7 @@ namespace websocket
   const char * opcode_name(opcode value);
 
   template<typename T>
-  bool is_valid_opcode(T value);
+  bool is_opcode_valid(T value);
 
   bool is_control(opcode value);
   bool is_non_control(opcode value);

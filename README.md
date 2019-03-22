@@ -1,6 +1,6 @@
 # Websocket++
 
-[RFC6455](https://tools.ietf.org/html/rfc6455)
+A small C++11 heaer-only library to handle websockets as per [RFC6455](https://tools.ietf.org/html/rfc6455).
 
 ## Reference
 
@@ -9,6 +9,8 @@ All code is scoped in `namespace websocket`.
 ### Types
 
 ###### Opcodes
+
+Type of frame and behaviour.
 
 ```cpp
 //Declared in <websocket/opcode.hpp>
@@ -30,11 +32,28 @@ bool is_valid_opcode(T value);
 
 bool is_control(opcode value);
 bool is_non_control(opcode value);
+
+bool is_data(opcode value);
 ```
 
-### Helper
+### Common
+
+General type, mask and constants.
+
 ```cpp
 //Declared in <websocket/helper.hpp>
+
+namespace mask
+{
+  constexpr uint8_t fin;
+  constexpr uint8_t rsv1;
+  constexpr uint8_t rsv2;
+  constexpr uint8_t rsv3;
+  constexpr uint8_t opcode;
+
+  constexpr uint8_t masked;
+  constexpr uint8_t length;
+};
 
 namespace size
 {
@@ -42,25 +61,32 @@ namespace size
 
   namespace medium
   {
-    constexpr type delimiter = 126;
+    constexpr type delimiter;
   };
 
   namespace large
   {
-    constexpr type delimiter = 127;
+    constexpr type delimiter;
+  };
+
+  namespace max
+  {
+    constexpr uint64_t small;
+    constexpr uint64_t medium;
+    constexpr uint64_t large;
   };
 };
 ```
 
 ### Frame
 
+Hold control and information data as well as the size and the mask.
+
 ```cpp
 //Defined in <websocket/frame.hpp>
 
 struct frame_t
 {
-  frame_t();
-
   bool is_final() const;
   bool has_rsv1() const;
   bool has_rsv2() const;
@@ -83,7 +109,7 @@ struct frame_t
   std::size_t header_size() const;
   std::size_t total_size() const;
 
-  static constexpr std::size_t max_header_size = 14;
+  static constexpr std::size_t max_header_size;
 
   uint8_t control;
   uint8_t info;
@@ -92,13 +118,20 @@ struct frame_t
 };
 ```
 
+* The `bool length(uint64_t value)` function returns whether the size does not exceed the maximum allowed value.
+
 ### Codec
+
+Mask or unmask a payload buffer (can always be done in place).
 
 ```cpp
 //Defined in <websocket/codec.hpp>
 
 void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);
 void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * out);
+
+void xcode(uint8_t * in, uint64_t size, uint32_t mask);
+void xcode(uint8_t * in, uint64_t size, const uint8_t mask[4]);
 ```
 
 ## Tests

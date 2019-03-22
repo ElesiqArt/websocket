@@ -18,7 +18,7 @@ namespace websocket
   }
 
   template<typename T> inline
-  bool is_valid_opcode(T value)
+  bool is_opcode_valid(T value)
   {
     static_assert(std::is_integral<T>::value || std::is_enum<T>::value, "T must be an integral type.");
 
