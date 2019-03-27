@@ -10,8 +10,10 @@ namespace websocket
 
   uint8_t * write_mask(uint32_t mask, uint8_t * out);
 
-  uint8_t * write(frame_t frame, uint8_t * out);
+  uint8_t * write_forward(frame_t frame, uint8_t * out);
   uint8_t * write_backward(frame_t frame, uint8_t * out);
+
+  uint8_t * write(frame_t frame, uint8_t * out);
 };
 
 #include <websocket/writer.hcp>

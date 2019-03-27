@@ -5,7 +5,6 @@
 #include <websocket/codec.hpp>
 #include <websocket/data.hpp>
 #include <websocket/frame.hpp>
-#include <websocket/handler.hpp>
 #include <websocket/opcode.hpp>
 #include <websocket/parser.hpp>
 #include <websocket/status.hpp>
@@ -150,7 +149,7 @@ void writer(bool masked)
       char data[frame_t::max_header_size + ::strlen(text)] = {0};
 
       {
-	uint8_t * payload = write_frame(frame, (uint8_t *)data);
+	uint8_t * payload = write_forward(frame, (uint8_t *)data);
 
 	if(frame.is_masked())
 	  {
@@ -166,7 +165,7 @@ void writer(bool masked)
 
       {
 	uint8_t * payload = (uint8_t *)data + frame_t::max_header_size;
-	uint8_t * begin = write_frame_backward(frame, payload);
+	uint8_t * begin = write_backward(frame, payload);
 
 	if(frame.is_masked())
 	  {

@@ -6,78 +6,6 @@ A small **C++ 11** header-only library under [MIT license](LICENSE) to handle we
 
 All code is scoped in `namespace websocket`.
 
-### Types
-
-###### Opcodes
-
-Type of frame and behaviour.
-
-```cpp
-//Declared in <websocket/opcode.hpp>
-
-enum class opcode
-{
-  continuation,
-  text,
-  binary,
-  close,
-  ping,
-  pong
-};
-
-const char * opcode_name(opcode value);
-
-template<typename T>
-bool is_valid_opcode(T value);
-
-bool is_control(opcode value);
-bool is_non_control(opcode value);
-
-bool is_data(opcode value);
-```
-
-### Common
-
-General types, masks and constants.
-
-```cpp
-//Declared in <websocket/helper.hpp>
-
-namespace mask
-{
-  constexpr uint8_t fin;
-  constexpr uint8_t rsv1;
-  constexpr uint8_t rsv2;
-  constexpr uint8_t rsv3;
-  constexpr uint8_t opcode;
-
-  constexpr uint8_t masked;
-  constexpr uint8_t length;
-};
-
-namespace size
-{
-  typedef uint8_t type;
-
-  namespace medium
-  {
-    constexpr type delimiter;
-  };
-
-  namespace large
-  {
-    constexpr type delimiter;
-  };
-
-  namespace max
-  {
-    constexpr uint64_t small;
-    constexpr uint64_t medium;
-    constexpr uint64_t large;
-  };
-};
-```
-
 ### Frame
 
 Hold control and information data as well as the size and the mask of the payload.
@@ -120,24 +48,43 @@ struct frame_t
 
 * The `bool length(uint64_t value)` function returns whether the size does not exceed the maximum allowed value.
 
-### Handler
+### Opcodes
 
-A wrapper to handle the frame, the payload and its masking status.
+Type of frame and behaviour.
 
 ```cpp
-//Defined in <websocket/handler.hpp>
+//Declared in <websocket/opcode.hpp>
 
-struct handler_t : frame_t
+enum class opcode
 {
-  bool is_payload_masked() const;
-  void is_payload_masked(bool val);
-
-  void encode();
-  void decode();
-
-  uint8_t * payload;
-  bool encoded;
+  continuation,
+  text,
+  binary,
+  close,
+  ping,
+  pong
 };
+
+const char * opcode_name(opcode value);
+
+template<typename T>
+bool is_valid_opcode(T value);
+
+bool is_control(opcode value);
+bool is_non_control(opcode value);
+
+bool is_data(opcode value);
+```
+
+### Parser and writer
+
+```cpp
+//Defined in <websocket/parser.hpp> and <websocket/writer.hpp>
+
+const uint8_t * parse(const uint8_t * in, frame_t & frame);
+
+uint8_t * write(frame_t frame, uint8_t * out);
+  uint8_t * write_backward(frame_t frame, uint8_t * out);
 ```
 
 ### Status code
@@ -187,6 +134,48 @@ void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * o
 
 void xcode(uint8_t * in, uint64_t size, uint32_t mask);
 void xcode(uint8_t * in, uint64_t size, const uint8_t mask[4]);
+```
+
+### Common
+
+General types, masks and constants.
+
+```cpp
+//Declared in <websocket/helper.hpp>
+
+namespace mask
+{
+  constexpr uint8_t fin;
+  constexpr uint8_t rsv1;
+  constexpr uint8_t rsv2;
+  constexpr uint8_t rsv3;
+  constexpr uint8_t opcode;
+
+  constexpr uint8_t masked;
+  constexpr uint8_t length;
+};
+
+namespace size
+{
+  typedef uint8_t type;
+
+  namespace medium
+  {
+    constexpr type delimiter;
+  };
+
+  namespace large
+  {
+    constexpr type delimiter;
+  };
+
+  namespace max
+  {
+    constexpr uint64_t small;
+    constexpr uint64_t medium;
+    constexpr uint64_t large;
+  };
+};
 ```
 
 ## Tests

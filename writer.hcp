@@ -36,7 +36,7 @@ namespace websocket
   }
 
   inline
-  uint8_t * write_frame(frame_t frame, uint8_t * out)
+  uint8_t * write_forward(frame_t frame, uint8_t * out)
   {
     out[0] = frame.control;
     out[1] = frame.info;
@@ -70,7 +70,7 @@ namespace websocket
   }
 
   inline
-  uint8_t * write_frame_backward(frame_t frame, uint8_t * out)
+  uint8_t * write_backward(frame_t frame, uint8_t * out)
   {
     if(frame.is_masked())
       {
@@ -94,11 +94,17 @@ namespace websocket
 	}
       }
 
-    --out;
-    *out = frame.info;
-    --out;
-    *out = frame.control;
+    out -= 2;
+
+    out[0] = frame.control;
+    out[1] = frame.info;
 
     return out;
+  }
+
+  inline
+  uint8_t * write(frame_t frame, uint8_t * out)
+  {
+    return write_forward(frame, out);
   }
 };
