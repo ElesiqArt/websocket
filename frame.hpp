@@ -38,6 +38,11 @@ namespace websocket
     std::size_t header_size() const;
     std::size_t total_size() const;
 
+  public:
+    bool operator == (const frame_t & rhs) const;
+    bool operator != (const frame_t & rhs) const;
+
+  public:
     static constexpr std::size_t max_header_size = 14;
 
   public:

@@ -40,14 +40,6 @@ namespace websocket
   {
     os << (bool)(value & mask::masked);
 
-    std::size_t length = value & mask::length;
-
-    if(length <= size::max::small)
-      {
-	os << '|';
-	print_size(os, length, 13);
-      }
-
     return os;
   }
 
@@ -64,23 +56,23 @@ namespace websocket
   inline
   std::ostream & print_mask(std::ostream & os, const frame_t & frame, size_t width)
   {
-    constexpr size_t size = 4 + 1 + 4 + 1 + 4 + 1 + 4 + 1;
+    constexpr size_t size = 4 + 1 + 4 + 1 + 4 + 1 + 4;
 
     assert(size <= width);
 
-    os << std::string(width - size + 1, ' ');
+    os << std::string(width - size, ' ');
 
-    char buf[size];
+    char buf[size + 1];
 
-    int written = snprintf(buf, size, "0x%02X 0x%02X 0x%02X 0x%02X",
+    int written = snprintf(buf, size + 1, "0x%02X 0x%02X 0x%02X 0x%02X",
 			   (frame.mask & 0xFF000000) >> 24,
 			   (frame.mask & 0x00FF0000) >> 16,
 			   (frame.mask & 0x0000FF00) >> 8,
 			   (frame.mask & 0x000000FF));
 
-    assert(written == size - 1);(void)written;
+    assert(written == size);(void)written;
 
-    return os.write(buf, size - 1);
+    return os.write(buf, size);
   }
 
   inline
@@ -89,87 +81,209 @@ namespace websocket
     switch(frame.size_type())
       {
       default://small
+      case size::medium::delimiter:
 	{
 	  if(frame.is_masked())
 	    {
-	      os << "+-+-+-+-+-------+-+-------------+-------------------------------+" << std::endl;
-	      os << "|F|R|R|R| opcode|M| Payload len |           Masking-key         |" << std::endl;
-	      os << "|I|S|S|S|  (4)  |A|     (7)     |               (32)            |" << std::endl;
-	      os << "|N|V|V|V|       |S|             |                               |" << std::endl;
-	      os << "| |1|2|3|       |K|             |                               |" << std::endl;
-	      os << "+-+-+-+-+ - - - +-+ - - - - - - + - - - - - - - - - - - - - - - +" << std::endl;
+	      os << "+-+-+-+-+-------+-+-------------------------+-------------------+" << std::endl;
+	      os << "|F|R|R|R|       |M|                         |                   |" << std::endl;
+
+	      if(frame.size_type() == size::medium::delimiter)
+		{
+		  os << "|I|S|S|S| opcode|A| Extended Payload length |    Masking-key    |" << std::endl;
+		  os << "|N|V|V|V|  (4)  |S| (7) |       (16)        |        (32)       |" << std::endl;
+		}
+	      else
+		{
+		  os << "|I|S|S|S| opcode|A|     Payload length      |    Masking-key    |" << std::endl;
+		  os << "|N|V|V|V|  (4)  |S|           (7)           |        (32)       |" << std::endl;
+		}
+
+	      os << "| |1|2|3|       |K|                         |                   |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - + - - - - - - - - - +" << std::endl;
 	    }
 	  else
 	    {
-	      os << "+-+-+-+-+-------+-+-------------+-------------------------------+" << std::endl;
-	      os << "|F|R|R|R| opcode|M| Payload len |                               |" << std::endl;
-	      os << "|I|S|S|S|  (4)  |A|     (7)     |                               |" << std::endl;
-	      os << "|N|V|V|V|       |S|             |                               |" << std::endl;
-	      os << "| |1|2|3|       |K|             |                               |" << std::endl;
-	      os << "+-+-+-+-+ - - - +-+ - - - - - - + - - - - - - - - - - - - - - - +" << std::endl;
+	      os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
+	      os << "|F|R|R|R|       |M|                                             |" << std::endl;
+
+	      if(frame.size_type() == size::medium::delimiter)
+		{
+		  os << "|I|S|S|S| opcode|A|           Extended Payload length           |" << std::endl;
+		  os << "|N|V|V|V|  (4)  |S| (7) |                 (16)                  |" << std::endl;
+		}
+	      else
+		{
+		  os << "|I|S|S|S| opcode|A|                Payload length               |" << std::endl;
+		  os << "|N|V|V|V|  (4)  |S|                      (7)                    |" << std::endl;
+		}
+
+	      os << "| |1|2|3|       |K|                                             |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
 	    }
 
-	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|';
+	  os << '|';
+	  print_control(os, frame.control) << '|';
+	  print_info(os, frame.info) << '|';
 
 	  if(frame.is_masked())
 	    {
-	      print_mask(os, frame, 31);
+	      print_size(os, frame.size, 25) << '|';
+	      print_mask(os, frame, 19);
 	    }
 	  else
 	    {
-	      os << std::string(31, ' ');
+	      print_size(os, frame.size, 45);
 	    }
 
 	  os << '|' << std::endl;
 
 	  break;
 	}
-      case size::medium::delimiter:
-	{
-	  os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
-	  os << "|F|R|R|R| opcode|M|           Extended payload length           |" << std::endl;
-	  os << "|I|S|S|S|  (4)  |A|                    (16)                     |" << std::endl;
-	  os << "|N|V|V|V|       |S|                                             |" << std::endl;
-	  os << "| |1|2|3|       |K|                                             |" << std::endl;
-	  os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
-
-	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|'; print_size(os, frame.size, 45) << '|' << std::endl;
-
-	  if(frame.is_masked())
-	    {
-	      os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
-	      os << "|                      Masking-key(32)                          |" << std::endl;
-	      os << "+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
-
-	      os << '|'; print_mask(os, frame, 63) << '|' << std::endl;
-	    }
-
-	  break;
-	}
       case size::large::delimiter:
 	{
-	  os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
-	  os << "|F|R|R|R| opcode|M|           Extended payload length           |" << std::endl;
-	  os << "|I|S|S|S|  (4)  |A|                    (64)                     |" << std::endl;
-	  os << "|N|V|V|V|       |S|                                             |" << std::endl;
-	  os << "| |1|2|3|       |K|                                             |" << std::endl;
-	  os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+	  if(frame.is_masked())
+	    {
+	      os << "+-+-+-+-+-------+-+-------------------------+-------------------+" << std::endl;
+	      os << "|F|R|R|R|       |M|                         |                   |" << std::endl;
+	      os << "|I|S|S|S| opcode|A| Extended payload length |    Masking-key    |" << std::endl;
+	      os << "|N|V|V|V|   (4) |S| (7) |       (63)        |        (32)       |" << std::endl;
+	      os << "| |1|2|3|       |K|                         |                   |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - + - - - - - - - - - +" << std::endl;
+	    }
+	  else
+	    {
+	      os << "+-+-+-+-+-------+-+---------------------------------------------+" << std::endl;
+	      os << "|F|R|R|R|       |M|                                             |" << std::endl;
+	      os << "|I|S|S|S| opcode|A|           Extended payload length           |" << std::endl;
+	      os << "|N|V|V|V|  (4)  |S| (7) |                 (63)                  |" << std::endl;
+	      os << "| |1|2|3|       |K|                                             |" << std::endl;
+	      os << "+-+-+-+-+ - - - +-+ - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
+	    }
 
-	  os << '|'; print_control(os, frame.control) << '|'; print_info(os, frame.info) << '|'; print_size(os, frame.size, 45) << '|' << std::endl;
+	  os << '|';
+	  print_control(os, frame.control) << '|';
+	  print_info(os, frame.info) << '|';
 
 	  if(frame.is_masked())
 	    {
-	      os << "+---------------------------------------------------------------+" << std::endl;
-	      os << "|                        Masking-key(32)                        |" << std::endl;
-	      os << "+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +" << std::endl;
-	      os << '|'; print_mask(os, frame, 63) << '|';
+	      print_size(os, frame.size, 25) << '|';
+	      print_mask(os, frame, 19);
 	    }
+	  else
+	    {
+	      print_size(os, frame.size, 45);
+	    }
+
+	  os << '|' << std::endl;
 
 	  break;
 	}
       }
 
     os << "+---------------------------------------------------------------+" << std::endl;
+
+    return os;
+  }
+
+  uint64_t print_payload(std::ostream & os, const frame_t & frame, const char * payload, bool encoded, size_t width, uint64_t length /* = 0 */)
+  {
+    const char * current = payload;
+
+    if(!encoded && frame.opcode_() == opcode::text)
+      {
+	const char * end = current + (length == 0 ? frame.size : std::min(frame.size, length));
+
+	std::size_t count = 0;
+	bool first = true;
+
+	while(current < end)
+	  {
+	    if(first)
+	      {
+		os << "|";
+		first = false;
+	      }
+	    else if(count == width - 1)
+	      {
+		os << "|" << std::endl;
+		first = true;
+		count = 0;
+	      }
+	    else
+	      {
+		if(*current == '\n')
+		  {
+		    os << std::string(width - count - 1, ' ');
+		    ++current;
+		    count = width - 1;
+		  }
+		else
+		  {
+		    os << *current;
+		    ++current;
+		    ++count;
+		  }
+	      }
+	  }
+
+	if(count != 0)
+	  {
+	    os << std::string(width - count - 1, ' ') << "|" << std::endl;
+	  }
+
+	return current - payload;
+      }
+    else
+      {
+	const size_t max = width / 5;
+	const char * end = payload + (length == 0 ? frame.size : std::min(std::min(frame.size, length), max));
+	uint64_t count = (end - current) / max;
+	char buf[6];
+
+	while(0 < count)
+	  {
+	    os << "|";
+
+	    for(size_t i = 0; i < max; ++i, ++current)
+	      {
+		int written = snprintf(buf, 6, "0x%02X ", *current);
+		assert(written == 5);
+		os.write(buf, 5);
+	      }
+
+	    os << std::string(width - max * 5 - 1, ' ') << "|" << std::endl;
+
+	    --count;
+	  }
+
+	if(current < end)
+	  {
+	    os << "|";
+
+	    count = end - current;
+	    while(current < end)
+	      {
+		int written = snprintf(buf, 6, "0x%02X ", *current);
+		assert(written == 5);
+		os.write(buf, 5);
+		++current;
+	      }
+
+	    os << std::string(width - (count * 5) % width - 1, ' ') << "|" << std::endl;
+	  }
+
+	return current - payload;
+      }
+  }
+
+  std::ostream & print(std::ostream & os, const frame_t & frame, const char * payload, bool encoded)
+  {
+    print_header(os, frame);
+
+    print_payload(os, frame, payload, encoded, 64);
+
+    os << '+' << std::string(63, '-') << '+';
 
     return os;
   }

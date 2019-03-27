@@ -10,7 +10,14 @@
 #include <websocket/status.hpp>
 #include <websocket/writer.hpp>
 
+#include <websocket/printer.hpp>
+
 using namespace websocket;
+
+std::ostream & operator << (std::ostream & os, const frame_t & frame)
+{
+  return print_header(os, frame);
+}
 
 SCENARIO("Opcode", "[opcode]")
 {
@@ -118,6 +125,8 @@ void parser(bool masked)
 
       frame_t frame;
       const uint8_t * current = parse(buffer, frame);
+
+      //REQUIRE(frame == data::frame(i, masked));//
 
       REQUIRE((std::size_t)(current - buffer) == size - std::strlen(text));
       REQUIRE(frame.length() == std::strlen(text));

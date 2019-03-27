@@ -14,9 +14,9 @@ namespace websocket
 
   std::ostream & print_header(std::ostream & os, const frame_t & frame);
 
-  std::ostream & print(std::ostream & os, const frame_t & frame, uint8_t * payload, bool encoded);
+  uint64_t print_payload(std::ostream & os, const frame_t & frame, const char * payload, bool encoded, size_t width, uint64_t length = 0);
 
-  uint64_t print_payload(std::ostream & os, const frame_t & frame, uint8_t * payload, std::size_t offset, bool encoded, size_t width, uint64_t length = 0);
+  std::ostream & print(std::ostream & os, const frame_t & frame, const char * payload, bool encoded);
 };
 
 #include <websocket/printer.hcp>

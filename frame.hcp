@@ -138,11 +138,13 @@ namespace websocket
 
 #undef SET_VALUE
 
+  inline
   size::type frame_t::size_type() const
   {
     return (size::type)(this->info & mask::length);
   }
 
+  inline
   std::size_t frame_t::header_size() const
   {
     size_t size = 2;
@@ -158,8 +160,24 @@ namespace websocket
     return size;
   }
 
+  inline
   std::size_t frame_t::total_size() const
   {
     return this->header_size() + this->length();
+  }
+
+  inline
+  bool frame_t::operator == (const frame_t & rhs) const
+  {
+    return this->control == rhs.control
+      && this->info == rhs.info
+      && this->size == rhs.size
+      && this->mask == rhs.mask;
+  }
+
+  inline
+  bool frame_t::operator != (const frame_t & rhs) const
+  {
+    return !this->operator == (rhs);
   }
 };

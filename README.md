@@ -140,6 +140,16 @@ namespace status_code
 };
 ```
 
+### Printer
+
+```cpp
+//Defined in <websocket/printer.hpp>
+
+std::ostream & print_header(std::ostream & os, const frame_t & frame);
+
+std::ostream & print(std::ostream & os, const frame_t & frame, const char * payload, bool encoded);
+```
+
 ### Common
 
 General types, masks and constants.
