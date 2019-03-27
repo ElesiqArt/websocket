@@ -7,7 +7,6 @@ namespace websocket
 {
   uint8_t * write_medium_size(uint64_t size, uint8_t * out);
   uint8_t * write_large_size(uint64_t size, uint8_t * out);
-
   uint8_t * write_mask(uint32_t mask, uint8_t * out);
 
   uint8_t * write_forward(frame_t frame, uint8_t * out);

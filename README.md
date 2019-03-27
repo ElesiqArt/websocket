@@ -46,11 +46,11 @@ struct frame_t
 };
 ```
 
-* The `bool length(uint64_t value)` function returns whether the size does not exceed the maximum allowed value.
+* The `bool length(uint64_t value)` function returns true the size does not exceed the maximum allowed value.
 
 ### Opcodes
 
-Type of frame and behaviour.
+Type of frame and associated behaviour.
 
 ```cpp
 //Declared in <websocket/opcode.hpp>
@@ -83,12 +83,29 @@ bool is_data(opcode value);
 
 const uint8_t * parse(const uint8_t * in, frame_t & frame);
 
-uint8_t * write(frame_t frame, uint8_t * out);
-  uint8_t * write_backward(frame_t frame, uint8_t * out);
+uint8_t * write_forward(frame_t frame, uint8_t * out);
+uint8_t * write_backward(frame_t frame, uint8_t * out);
+```
+
+### Codec
+
+Mask or unmask a payload buffer (can be done in place).
+
+```cpp
+//Defined in <websocket/codec.hpp>
+
+void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);
+void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * out);
+
+void xcode(uint8_t * in, uint64_t size, uint32_t mask);
+void xcode(uint8_t * in, uint64_t size, const uint8_t mask[4]);
 ```
 
 ### Status code
 
+Closing status and reason.
+
+```cpp
 namespace status_code
 {
   typedef uint16_t type;
@@ -121,19 +138,6 @@ namespace status_code
     static const char * reason(type code);
   };
 };
-
-### Codec
-
-Mask or unmask a payload buffer (can always be done in place).
-
-```cpp
-//Defined in <websocket/codec.hpp>
-
-void xcode(const uint8_t * in, uint64_t size, uint32_t mask, uint8_t * out);
-void xcode(const uint8_t * in, uint64_t size, const uint8_t mask[4], uint8_t * out);
-
-void xcode(uint8_t * in, uint64_t size, uint32_t mask);
-void xcode(uint8_t * in, uint64_t size, const uint8_t mask[4]);
 ```
 
 ### Common
