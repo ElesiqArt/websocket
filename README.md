@@ -150,6 +150,20 @@ std::ostream & print_header(std::ostream & os, const frame_t & frame);
 std::ostream & print(std::ostream & os, const frame_t & frame, const char * payload, bool encoded);
 ```
 
+### Key
+
+Convenient size information to build the handshake response header.
+
+```cpp
+//Declared in <websocket/key.hpp>
+
+constexpr char guid[];
+
+constexpr std::size_t key_size;
+constexpr std::size_t concatenated_key_guid_size;
+constexpr std::size_t header_field_value_size;
+```
+
 ### Common
 
 General types, masks and constants.

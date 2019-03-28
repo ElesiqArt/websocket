@@ -19,7 +19,6 @@ void run(bool masked)
 
 int main()
 {
-#if 0
   {
     frame_t frame;
 
@@ -77,7 +76,7 @@ int main()
 
     print_header(std::cout, frame);
   }
-#endif
-  //run(false);
+
+  run(false);
   run(true);
 }
