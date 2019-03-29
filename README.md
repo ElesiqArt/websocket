@@ -46,7 +46,7 @@ struct frame_t
 };
 ```
 
-* The `bool length(uint64_t value)` function returns true the size does not exceed the maximum allowed value.
+* The `bool length(uint64_t value)` function returns true if the size does not exceed the maximum allowed value.
 
 ### Opcodes
 
