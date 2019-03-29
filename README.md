@@ -152,7 +152,7 @@ std::ostream & print(std::ostream & os, const frame_t & frame, const char * payl
 
 ### Key
 
-Convenient size information to build the handshake response header.
+Convenient variables to build the handshake response header.
 
 ```cpp
 //Declared in <websocket/key.hpp>
